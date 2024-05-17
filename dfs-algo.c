@@ -205,14 +205,16 @@ int main(void) {
     }
 
     // Jika ada, maka jalankan algoritma dfs dan hitung waktu eksekusi
-
-    // Inisialisasi array visited
-    int visited[jumlah_kota];
-    memset(visited, 0, sizeof(visited));
+    int *visited = (int *)malloc(jumlah_kota * sizeof(int));
+    for (int i = 0; i < jumlah_kota; i++) {
+        visited[i] = 0; // Inisiasi variabel pada masing-masing elemen array
+    }
     visited[startIndex] = 1; // Mulai dari kota yang dipilih
-    int path[jumlah_kota + 1];  // Untuk menyimpan jalur saat ini
-    int bestPath[jumlah_kota + 1];  // Untuk menyimpan jalur terbaik
+
+    int path[jumlah_kota + 1];  // Untuk menyimpan jalur saat ini, karena balik ke bandung, maka ditambah 1
+    int bestPath[jumlah_kota + 1];  // Untuk menyimpan jalur terbaik, sama
     path[0] = startIndex;
+
     // Mulai DFS untuk mencari biaya minimum
     double minCost = INFINITY;
     clock_t start_time = clock();
