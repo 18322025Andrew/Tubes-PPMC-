@@ -16,6 +16,7 @@ typedef struct Node {
     struct Node* next;
 } Node;
 
+//
 int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
     Node *temp = (Node*)malloc(sizeof(Node));
     temp->bujur = data_bujur;
@@ -122,6 +123,7 @@ void findBestStartingCity(Node cities[], int n, int startCityIndex, double *best
 }
 
 int main() {
+    clock_t start = clock();
     Node *cities_list = input_file();
     if (cities_list == NULL) return 1;
 
@@ -143,7 +145,9 @@ int main() {
 
     char startCityName[MAX_LEN_STRING];
     printf("Enter starting point: ");
-    scanf("%s", startCityName);
+    getchar(); // To consume the newline character left by previous scanf
+    fgets(startCityName, MAX_LEN_STRING, stdin);
+    startCityName[strcspn(startCityName, "\n")] = '\0'; // Remove the newline character
 
     int startCityIndex = -1;
     for (int i = 0; i < n; i++) {
@@ -162,21 +166,21 @@ int main() {
     double bestDistance;
     int *bestRoute = (int *)malloc(n * sizeof(int));
 
-    clock_t start = clock();
     findBestStartingCity(cities, n, startCityIndex, &bestDistance, bestRoute);
-    clock_t end = clock();
-    double timeElapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
-
+    
     printf("Best route found:\n");
     for (int i = 0; i < n; i++) {
         printf("%s -> ", cities[bestRoute[i]].nama_kota);
     }
     printf("%s\n", cities[startCityIndex].nama_kota);
     printf("Best route distance: %.5f km\n", bestDistance);
-    printf("Time elapsed: %.10f s\n", timeElapsed);
-
+    
     free(cities);
     free(bestRoute);
+
+    clock_t end = clock();
+    double timeElapsed = ((double)(end - start))/CLOCKS_PER_SEC;
+    printf("Time elapsed: %.10f ms\n", timeElapsed);
 
     return 0;
 }
