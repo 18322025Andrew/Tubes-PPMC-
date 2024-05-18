@@ -6,13 +6,13 @@
 #include <float.h>
 
 // Inisiasi awal variabel
-#define MAX_LEN_STRING 255
-#define rEarth 6371
-#define maxCities 1000
+#define Max_length 100 // Jumlah kata kota
+#define radius_earth 6371 // Jari-jari bumi
+#define maxCities 520 // Banyak kota yang dapat ditampung dilihat dari data list-coordinates-indonesian.csv
 
-// Data struct yang digunakan 
+// Data struct yang digunakan
 typedef struct Node {
-    char nama_kota[MAX_LEN_STRING];
+    char nama_kota[Max_length];
     double lintang;
     double bujur;
     struct Node* next;
@@ -22,7 +22,7 @@ typedef struct Node {
 typedef struct {
     int path[maxCities];
     double cost;
-} PathNode;
+} pathNode;
 
 // Fungsi untuk menambah node
 int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
@@ -40,12 +40,12 @@ int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
     return 0;
 }
 
-// Fungsi untuk menerima input data csv 
+// Fungsi untuk menerima input data csv
 Node* input_file() {
     Node *Linked_list_kota = NULL;
 
-    char file_name[MAX_LEN_STRING];
-    printf("Masukkan File Map: ");
+    char file_name[Max_length];
+    printf("Enter list of cities file name: ");
     scanf("%s", file_name);
 
     FILE* stream = fopen(file_name, "r");
@@ -54,8 +54,8 @@ Node* input_file() {
         return NULL;
     }
 
-    char line[MAX_LEN_STRING];
-    while (fgets(line, MAX_LEN_STRING, stream)) {
+    char line[Max_length];
+    while (fgets(line, Max_length, stream)) {
         char *kota_temp = strtok(line, ",");
         char *token_lintang = strtok(NULL, ",");
         char *token_bujur = strtok(NULL, "\n");
@@ -81,20 +81,20 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return rEarth * c;
+    return radius_earth * c;
 }
 
 // Fungsi untuk menghitung jarak total antara
 double calculateTotalDistance(int *path, Node *cities[], int numCities) {
     double totalDistance = 0;
     for (int i = 0; i < numCities; ++i) {
-        totalDistance += haversine(cities[path[i]]->lintang, cities[path[i]]->bujur, 
+        totalDistance += haversine(cities[path[i]]->lintang, cities[path[i]]->bujur,
                                    cities[path[(i + 1) % numCities]]->lintang, cities[path[(i + 1) % numCities]]->bujur);
     }
     return totalDistance;
 }
 
-// Fungsi untuk menentukan urutan 
+// Fungsi untuk menentukan urutan
 int findCityIndex(Node *cities[], int numCities, char *cityName) {
     for (int i = 0; i < numCities; ++i) {
         if (strcmp(cities[i]->nama_kota, cityName) == 0) {
@@ -105,11 +105,11 @@ int findCityIndex(Node *cities[], int numCities, char *cityName) {
 }
 
 // Fungsi untuk menentukan jarak terpendek dari kota-kota yang ada
-void bfsTSP(Node *cities[], int numCities, int startCityIndex) {
+void bfs(Node *cities[], int numCities, int startCityIndex) {
     int queueSize = 1;
     int maxQueueSize = 1 << (numCities - 1); // 2^(numCities-1)
-    PathNode *queue = (PathNode *)malloc(maxQueueSize * sizeof(PathNode));
-    PathNode bestPath;
+    pathNode *queue = (pathNode *)malloc(maxQueueSize * sizeof(pathNode));
+    pathNode bestPath;
     bestPath.cost = DBL_MAX;
 
     for (int i = 0; i < numCities; ++i) {
@@ -119,7 +119,7 @@ void bfsTSP(Node *cities[], int numCities, int startCityIndex) {
     queue[0].cost = 0;
 
     while (queueSize > 0) {
-        PathNode current = queue[--queueSize];
+        pathNode current = queue[--queueSize];
 
         int depth = 0;
         while (depth < numCities && current.path[depth] != -1) ++depth;
@@ -143,24 +143,24 @@ void bfsTSP(Node *cities[], int numCities, int startCityIndex) {
             }
             if (found) continue;
 
-            PathNode newNode = current;
+            pathNode newNode = current;
             newNode.path[depth] = i;
             newNode.cost = current.cost + haversine(cities[current.path[depth - 1]]->lintang, cities[current.path[depth - 1]]->bujur, cities[i]->lintang, cities[i]->bujur);
             queue[queueSize++] = newNode;
         }
     }
 
-    printf("Shortest route: ");
+    printf("Best Route: ");
     for (int i = 0; i < numCities; ++i) {
         printf("%s -> ", cities[bestPath.path[i]]->nama_kota);
     }
     printf("%s\n", cities[bestPath.path[0]]->nama_kota);
-    printf("Total distance: %.2f km\n", bestPath.cost);
+    printf("Best route distance: %.5f km\n", bestPath.cost);
 
     free(queue);
 }
 
-// Menampilkan data 
+// Menampilkan data
 void print(Node* hasil) {
     Node* display = hasil;
     while (display != NULL) {
@@ -169,7 +169,7 @@ void print(Node* hasil) {
     }
 }
 
-// Fungsi utama 
+// Fungsi utama
 int main() {
     // Menerima input berupa data csv
     Node* linkedListKota = input_file();
@@ -186,17 +186,19 @@ int main() {
         current = current->next;
     }
 
-    char startCity[MAX_LEN_STRING];
-    printf("Enter the starting city: ");
-    scanf("%s", startCity);
+    char startCity[Max_length];
+    printf("Enter starting point: ");
+    getchar(); // Consume leftover newline character from previous input
+    fgets(startCity, Max_length, stdin);
+    startCity[strcspn(startCity, "\n")] = '\0'; // Remove trailing newline
 
     int startCityIndex = findCityIndex(cities, numCities, startCity);
     if (startCityIndex == -1) {
-        printf("City not found in the list.\n");
+        printf("Kota tidak dapat ditemukan, silahkan coba lagi.\n");
         return 1;
     }
 
-    bfsTSP(cities, numCities, startCityIndex);
+    bfs(cities, numCities, startCityIndex);
 
     return 0;
 }
