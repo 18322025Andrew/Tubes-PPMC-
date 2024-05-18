@@ -1,115 +1,150 @@
 #include <stdio.h>
-#include <math.h>
-#include <float.h>
+#include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
 
-// Define city data structure
-typedef struct {
-    char name[50];
-    double latitude;
-    double longitude;
-} City;
+#define ALPHA 1         // Pheromone trail importance factor
+#define pi 3.14159265358979323846
+#define r 6371
+#define MAX_CHAR 255
+#define MAX_CITY 15
 
-// Haversine formula for calculating distance between two points
-double haversine(double lat1, double lon1, double lat2, double lon2) {
-    double dLat = (lat2 - lat1) * M_PI / 180.0;
-    double dLon = (lon2 - lon1) * M_PI / 180.0;
+int size;
+int vis[15], permutation[15], n;
+int best_route[15];
+float min_cost = 1e9;
+char namaKota[15][255];
+float matriks[15][15];
 
-    lat1 = lat1 * M_PI / 180.0;
-    lat2 = lat2 * M_PI / 180.0;
-
-    double a = pow(sin(dLat / 2), 2) + pow(sin(dLon / 2), 2) * cos(lat1) * cos(lat2);
-    double rad = 6371;
-    double c = 2 * asin(sqrt(a));
-    return rad * c;
-}
-
-// Calculate distances between all pairs of cities
-void calculateDistances(const City cities[4], double distances[4][4]) {
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            if (i != j) {
-                distances[i][j] = haversine(cities[i].latitude, cities[i].longitude,
-                                            cities[j].latitude, cities[j].longitude);
-            } else {
-                distances[i][j] = 0.0; // Set distance to itself as 0
-            }
+int open_init(char *namaFile, float matriks[15][15], char namaKota[15][255], int *n){
+    *n = 0;
+    // Pembukaan dan pengecekan keberadaan file
+    FILE *file = fopen(namaFile, "r");
+    if (file == NULL){
+        printf("File tidak ada!");
+        return 0;
+    }
+    // Inisiasi variable lokal yang akan digunakan untuk fungsi open_init
+    char line[255];
+    float latitude[15];
+    float longitude[15];
+    // Pembacaan file
+    while (fgets(line, 255, file)){
+        // Pemasukan data dari baris yang terbaca ke dalam masing masing variable dengan tipe data sesuai
+        strcpy(namaKota[*n], strtok(line, ","));
+        latitude[*n] = atof(strtok(NULL, ","));
+        longitude[*n] = atof(strtok(NULL, "\n"));
+        
+        // printf("\n%s %f %f", namaKota[*n], latitude[*n], longitude[*n]);
+        *n += 1;
+    }
+    
+    // Pengecekan apakah jumlah kota sesuai ketentuan (6 <= jumlah kota <= 15)
+    if (*n < 5 || *n > 14){
+        printf("\nJumlah kota tidak sesuai!");
+        return 0;
+    }
+    // Pengisian adjecent matriks, yang berisi jarak tiap titik ke titik lainnya
+    for (int i = 0; i < *n; i++){
+        for (int j = 0; j < *n; j++){
+            // Komponen 1 : kolom, komponen 2 : baris
+            matriks[i][j] = 2 * r * asin(sqrt(pow(sin((latitude[j]-latitude[i])*pi/360), 2) + cos(latitude[j]*pi/180) * cos(latitude[i]*pi/180) * pow(sin((longitude[j]-longitude[i])*pi/360), 2)));
         }
     }
-}
-
-// Swap function to be used for generating permutations
-void swap(int *a, int *b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-// Function to generate the next permutation
-int next_permutation(int *start, int *end) {
-    if (start == end) return 0;
-    int *i = end - 1;
-    while (i > start && *(i - 1) >= *i) --i;
-    if (i == start) return 0;
-    int *j = end - 1;
-    while (*j <= *(i - 1)) --j;
-    swap(i - 1, j);
-    for (++i, --end; i < end; ++i, --end) swap(i, end);
     return 1;
 }
 
-// Brute-force approach to find the shortest TSP path
-void findShortestTSPPath(const City cities[4], double distances[4][4], double *shortestDistance, int bestPermutation[4]) {
-    int permutation[4] = {0, 1, 2, 3};
-    *shortestDistance = DBL_MAX;
-
-    do {
-        double totalDistance = 0.0;
-        for (int i = 0; i < 3; i++) {
-            int currentCity = permutation[i];
-            int nextCity = permutation[i + 1];
-            totalDistance += distances[currentCity][nextCity];
+void generate(int x) {
+    if(x >= n) { // basis rekursi
+        float cost = 0;
+        for(int i = 1; i < n; ++i) {
+            cost += matriks[permutation[i - 1]][permutation[i]];
         }
-        // Optionally, add the distance from the last city back to the first to complete the loop
-        totalDistance += distances[permutation[3]][permutation[0]];
 
-        if (totalDistance < *shortestDistance) {
-            *shortestDistance = totalDistance;
-            memcpy(bestPermutation, permutation, 4 * sizeof(int));
+        cost += matriks[permutation[n - 1]][permutation[0]];
+
+        if(cost < min_cost) { // update minimum cost and the best route
+            min_cost = cost;
+            for(int i = 0; i < n; ++i) {
+                best_route[i] = permutation[i];
+            }
         }
-    } while (next_permutation(permutation, permutation + 4));
+    } else {
+        for(int i = 0; i < n; ++i) {
+            if(vis[i]) continue;
+            vis[i] = 1;
+            permutation[x] = i;
+            generate(x + 1);
+            vis[i] = 0;
+        }
+    }
+}
+
+void find_starting_point(char *point, int *index) {
+    for(int i = 0; i < n; ++i) {
+        if(strcmp(point, namaKota[i]) == 0) {
+            *index = i;
+            return;
+        }
+    }
+    *index = -1; // Tidak ditemukan
+}
+
+void output_best_route(){
+    puts("Best route found:");
+    for(int i = 0; i < n; ++i) {
+        printf("%s -> ", namaKota[best_route[i]]);
+    }
+
+    printf("%s\n", namaKota[best_route[0]]);
+    printf("Best route distance: %.5f km\n", min_cost);
 }
 
 int main() {
-    City cities[4];
-    for (int i = 0; i < 4; ++i) {
-        printf("Enter the name of city %d: ", i + 1);
-        scanf("%s", cities[i].name);
-        printf("Enter the latitude of %s: ", cities[i].name);
-        scanf("%lf", &cities[i].latitude);
-        printf("Enter the longitude of %s: ", cities[i].name);
-        scanf("%lf", &cities[i].longitude);
+    char namaFile[255];
+    n = 0;
+
+    // Input File
+    printf("Enter list of cities file name: ");
+    scanf("%s", namaFile);
+
+
+    if (open_init(namaFile, matriks, namaKota, &n) == 0){
+        return 0;
     }
 
-    // Calculate distances between all cities
-    double distances[4][4];
-    calculateDistances(cities, distances);
+    size = n; // Update size to be the number of cities read
 
-    // Find the shortest TSP path
-    double shortestDistance;
-    int bestPermutation[4];
-    findShortestTSPPath(cities, distances, &shortestDistance, bestPermutation);
+    int bestTour = (int)malloc(size * sizeof(int));
+    float bestTourLength = -1;
 
-    // Print the shortest distance
-    printf("Shortest TSP path distance: %.2f km\n", shortestDistance);
+    char startingCity[100];
+    printf("Enter starting point: ");
+    getchar(); // Menghilangkan karakter newline tersisa dari input sebelumnya
+    fgets(startingCity, sizeof(startingCity), stdin);
+    startingCity[strcspn(startingCity, "\n")] = '\0'; // Menghapus newline dari input
 
-    // Print the order of cities in the shortest path
-    printf("Order of cities in the shortest path: ");
-    for (int i = 0; i < 4; ++i) {
-        printf("%s -> ", cities[bestPermutation[i]].name);
+    // Find the index of the starting city
+    int startingIndex;
+    find_starting_point(startingCity, &startingIndex);
+
+    // Handling case if the starting city is not found
+    if (startingIndex == -1) {
+        printf("Starting city not found\n");
+        return 0;
     }
-    // Print the first city again to show the loop
-    printf("%s\n", cities[bestPermutation[0]].name);
-.                                                                                                                                                                                                             \
+
+    vis[startingIndex] = 1; // node starting point ditandai
+    permutation[0] = startingIndex;
+    clock_t start_time = clock();
+    generate(1);
+    clock_t end_time = clock();
+    output_best_route();
+
+    double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    // Cetak waktu hasil eksekusi
+    printf("Time elapsed: %.10f s\n", time_spent);
+
     return 0;
 }
