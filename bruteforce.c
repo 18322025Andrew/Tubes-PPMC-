@@ -146,5 +146,5 @@ int main() {
     // Cetak waktu hasil eksekusi
     printf("Time elapsed: %.10f s\n", time_spent);
 
-    return 0;
+    return 0;
 }
