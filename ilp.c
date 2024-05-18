@@ -217,12 +217,14 @@ int main(){
   }
   insert_matriks(Matriks, linked_data, jumlah_vertex, vertex);
   //printf("Display isi mastriks\n");
+  /*
   for(int i = 0; i < jumlah_vertex; i++){
     for(int j = 0; j < jumlah_vertex; j++){
       printf("%d,%d : %.6f |",i,j, Matriks[i][j]);
     }
     printf("\n");
   }
+  */
   
   char nama[MAX_LEN_STRING];
   printf("Initial city : ");
