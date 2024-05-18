@@ -177,7 +177,6 @@ int main() {
         return 1;
     }
 
-    // Convert linked list to array of pointers for easier manipulation
     Node* cities[maxCities];
     int numCities = 0;
     Node* current = linkedListKota;
@@ -188,9 +187,9 @@ int main() {
 
     char startCity[Max_length];
     printf("Enter starting point: ");
-    getchar(); // Consume leftover newline character from previous input
+    getchar();
     fgets(startCity, Max_length, stdin);
-    startCity[strcspn(startCity, "\n")] = '\0'; // Remove trailing newline
+    startCity[strcspn(startCity, "\n")] = '\0';
 
     int startCityIndex = findCityIndex(cities, numCities, startCity);
     if (startCityIndex == -1) {
