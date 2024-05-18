@@ -257,62 +257,77 @@ int find_city_index(Node* cities[], int numCities, const char* city_name) {
 }
 
 int main() {
-    char file_name[MAX_LEN_STRING];
-    printf("Masukkan File Map: ");
-    scanf("%s", file_name);
-    Node *daftar_kota = input_file(file_name);
-    if (daftar_kota == NULL) {
-        printf("Data Kosong !");
-        return 0;
-    }
+    static int run_counter = 0;
 
-    int jumlah_kota = calculate_cities(daftar_kota);
-    Node *cities[jumlah_kota];
-    make_cities_arrOfNode(daftar_kota, cities, jumlah_kota);
+    while (1) {
+        run_counter++;
 
-    double distances[jumlah_kota][jumlah_kota];
-    make_distanceMatrices(cities, jumlah_kota, distances);
-
-    double pheromones[jumlah_kota][jumlah_kota];
-    for (int i = 0; i < jumlah_kota; i++) {
-        for (int j = 0; j < jumlah_kota; j++) {
-            pheromones[i][j] = 1.0;
+        char file_name[MAX_LEN_STRING];
+        printf("#%d\nEnter list of cities file name: ", run_counter);
+        scanf("%s", file_name);
+        Node *daftar_kota = input_file(file_name);
+        if (daftar_kota == NULL) {
+            printf("Data Kosong !\n");
+            continue;
         }
-    }
 
-    int numAnts = jumlah_kota+1;
-    double alpha = 1.0;
-    double beta = 2.0;
-    double evaporation_rate = 0.5;
-    int max_iterations = 100;
+        int jumlah_kota = calculate_cities(daftar_kota);
+        Node *cities[jumlah_kota];
+        make_cities_arrOfNode(daftar_kota, cities, jumlah_kota);
 
-    char initial_city[MAX_LEN_STRING];
-    printf("Enter the name of the initial city: ");
-    getchar();  // mengambil karakter newline dari input sebelumnya
-    fgets(initial_city, MAX_LEN_STRING, stdin);
-    initial_city[strcspn(initial_city, "\n")] = '\0';
+        double distances[jumlah_kota][jumlah_kota];
+        make_distanceMatrices(cities, jumlah_kota, distances);
 
-    int startIndex = find_city_index(cities, jumlah_kota, initial_city);
-    if (startIndex == -1) {
-        printf("City not found\n");
-        return EXIT_FAILURE;
-    }
-    // Jalankan algoritma Ant Colony Optimization dan hitung waktu eksekusi
-    clock_t start_time = clock();
-    ant_colony_optimization(cities, jumlah_kota, distances, pheromones, numAnts, alpha, beta, evaporation_rate, max_iterations, startIndex);
-    clock_t end_time = clock();
+        double pheromones[jumlah_kota][jumlah_kota];
+        for (int i = 0; i < jumlah_kota; i++) {
+            for (int j = 0; j < jumlah_kota; j++) {
+                pheromones[i][j] = 1.0;
+            }
+        }
 
-    // Hitung waktu eksekusi
-    double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+        int numAnts = jumlah_kota + 1;
+        double alpha = 1.0;
+        double beta = 2.0;
+        double evaporation_rate = 0.5;
+        int max_iterations = 100;
 
-    // Cetak waktu hasil eksekusi
-    printf("Time elapsed: %.10f s\n", time_spent);
+        char initial_city[MAX_LEN_STRING];
+        printf("Enter the name of the initial city: ");
+        getchar();  // mengambil karakter newline dari input sebelumnya
+        fgets(initial_city, MAX_LEN_STRING, stdin);
+        initial_city[strcspn(initial_city, "\n")] = '\0';
 
-    Node* temp;
-    while (daftar_kota != NULL) {
-        temp = daftar_kota;
-        daftar_kota = daftar_kota->next;
-        free(temp);
+        int startIndex = find_city_index(cities, jumlah_kota, initial_city);
+        if (startIndex == -1) {
+            printf("City not found\n");
+            return EXIT_FAILURE;
+        }
+
+        // Jalankan algoritma Ant Colony Optimization dan hitung waktu eksekusi
+        clock_t start_time = clock();
+        ant_colony_optimization(cities, jumlah_kota, distances, pheromones, numAnts, alpha, beta, evaporation_rate, max_iterations, startIndex);
+        clock_t end_time = clock();
+
+        // Hitung waktu eksekusi
+        double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+
+        // Cetak waktu hasil eksekusi
+        printf("Time elapsed: %.10f s\n", time_spent);
+
+        Node* temp;
+        while (daftar_kota != NULL) {
+            temp = daftar_kota;
+            daftar_kota = daftar_kota->next;
+            free(temp);
+        }
+
+        char choice;
+        printf("Do you want to input a new file? (y/n): ");
+        scanf(" %c", &choice);
+
+        if (choice == 'n' || choice == 'N') {
+            break;
+        }
     }
 
     return 0;
