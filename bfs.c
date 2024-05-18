@@ -1,13 +1,16 @@
+// Library yang digunakan
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
+#include <math.h>
 #include <float.h>
 
-#define EARTH_RADIUS 6371.0 // Radius of Earth in kilometers
+// Inisiasi awal variabel
 #define MAX_LEN_STRING 255
-#define MAX_CITIES 15
+#define rEarth 6371
+#define maxCities 1000
 
+// Data struct yang digunakan 
 typedef struct Node {
     char nama_kota[MAX_LEN_STRING];
     double lintang;
@@ -15,23 +18,73 @@ typedef struct Node {
     struct Node* next;
 } Node;
 
+// Data struct untuk mengetahui
 typedef struct {
-    int path[MAX_CITIES];
+    int path[maxCities];
     double cost;
 } PathNode;
 
+// Fungsi untuk menambah node
+int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
+    Node *temp = (Node*)malloc(sizeof(Node));
+    if (!temp) {
+        return 1; // Failed to allocate memory
+    }
+
+    temp->bujur = data_bujur;
+    temp->lintang = data_lintang;
+    strcpy(temp->nama_kota, nama);
+    temp->next = *head;
+    *head = temp;
+
+    return 0;
+}
+
+// Fungsi untuk menerima input data csv 
+Node* input_file() {
+    Node *Linked_list_kota = NULL;
+
+    char file_name[MAX_LEN_STRING];
+    printf("Masukkan File Map: ");
+    scanf("%s", file_name);
+
+    FILE* stream = fopen(file_name, "r");
+    if (stream == NULL) {
+        printf("File tidak ditemukan\n");
+        return NULL;
+    }
+
+    char line[MAX_LEN_STRING];
+    while (fgets(line, MAX_LEN_STRING, stream)) {
+        char *kota_temp = strtok(line, ",");
+        char *token_lintang = strtok(NULL, ",");
+        char *token_bujur = strtok(NULL, "\n");
+
+        double lintang, bujur;
+        sscanf(token_lintang, "%lf", &lintang);
+        sscanf(token_bujur, "%lf", &bujur);
+
+        add(&Linked_list_kota, lintang, bujur, kota_temp);
+    }
+
+    fclose(stream);
+    return Linked_list_kota;
+}
+
+// Fungsi untuk menghitung jarak antar kedua titik koordinat
 double haversine(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * M_PI / 180.0;
     double dLon = (lon2 - lon1) * M_PI / 180.0;
     lat1 = lat1 * M_PI / 180.0;
     lat2 = lat2 * M_PI / 180.0;
 
-    double a = sin(dLat / 2) * sin(dLat / 2) + sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
+    double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return EARTH_RADIUS * c;
+    return rEarth * c;
 }
 
+// Fungsi untuk menghitung jarak total antara
 double calculateTotalDistance(int *path, Node *cities[], int numCities) {
     double totalDistance = 0;
     for (int i = 0; i < numCities; ++i) {
@@ -41,6 +94,7 @@ double calculateTotalDistance(int *path, Node *cities[], int numCities) {
     return totalDistance;
 }
 
+// Fungsi untuk menentukan urutan 
 int findCityIndex(Node *cities[], int numCities, char *cityName) {
     for (int i = 0; i < numCities; ++i) {
         if (strcmp(cities[i]->nama_kota, cityName) == 0) {
@@ -50,6 +104,7 @@ int findCityIndex(Node *cities[], int numCities, char *cityName) {
     return -1;
 }
 
+// Fungsi untuk menentukan jarak terpendek dari kota-kota yang ada
 void bfsTSP(Node *cities[], int numCities, int startCityIndex) {
     int queueSize = 1;
     int maxQueueSize = 1 << (numCities - 1); // 2^(numCities-1)
@@ -105,23 +160,7 @@ void bfsTSP(Node *cities[], int numCities, int startCityIndex) {
     free(queue);
 }
 
-int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
-    Node *temp = (Node*)malloc(sizeof(Node));
-    temp->bujur = data_bujur;
-    temp->lintang = data_lintang;
-    strcpy(temp->nama_kota, nama);
-
-    // Check if head is NULL
-    if (*head == NULL) {
-        temp->next = NULL;
-        *head = temp;
-    } else {
-        temp->next = *head;
-        *head = temp;
-    }
-    return 0;
-}
-
+// Menampilkan data 
 void print(Node* hasil) {
     Node* display = hasil;
     while (display != NULL) {
@@ -130,51 +169,19 @@ void print(Node* hasil) {
     }
 }
 
-Node* input_file() {
-    Node *Linked_list_kota = NULL;
-    char file_name[MAX_LEN_STRING];
-    printf("Masukkan File Map: ");
-    scanf("%s", file_name);
-
-    FILE* stream = fopen(file_name, "r");
-
-    if (stream == NULL) {
-        printf("File tidak ditemukan");
-        return NULL;
-    }
-
-    char line[MAX_LEN_STRING];
-    char tempLine[MAX_LEN_STRING];
-    char token_bujur[MAX_LEN_STRING];
-    char token_lintang[MAX_LEN_STRING];
-    char kota_temp[MAX_LEN_STRING];
-    double lintang, bujur;
-
-    while (fgets(line, MAX_LEN_STRING, stream)) {
-        strcpy(tempLine, line);
-        strcpy(kota_temp, strtok(tempLine, ","));
-        strcpy(token_lintang, strtok(NULL, ","));
-        strcpy(token_bujur, strtok(NULL, "\n"));
-        sscanf(token_bujur, "%lf", &bujur);
-        sscanf(token_lintang, "%lf", &lintang);
-        add(&Linked_list_kota, lintang, bujur, kota_temp);
-    }
-
-    fclose(stream);
-    return Linked_list_kota;
-}
-
+// Fungsi utama 
 int main() {
+    // Menerima input berupa data csv
     Node* linkedListKota = input_file();
     if (linkedListKota == NULL) {
         return 1;
     }
 
     // Convert linked list to array of pointers for easier manipulation
-    Node* cities[MAX_CITIES];
+    Node* cities[maxCities];
     int numCities = 0;
     Node* current = linkedListKota;
-    while (current != NULL && numCities < MAX_CITIES) {
+    while (current != NULL && numCities < maxCities) {
         cities[numCities++] = current;
         current = current->next;
     }
