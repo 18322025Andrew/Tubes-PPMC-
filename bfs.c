@@ -46,7 +46,7 @@ Node* input_file() {
 
     char file_name[Max_length];
     printf("Enter list of cities file name: ");
-    scanf("%s", file_name);
+    fgets("%s", file_name);
 
     FILE* stream = fopen(file_name, "r");
     if (stream == NULL) {
