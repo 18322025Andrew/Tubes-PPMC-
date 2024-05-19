@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define MAX_LEN_STRING 255
 #define MAX_CITIES 100 // Batas maksimum jumlah kota
@@ -15,6 +16,14 @@ typedef struct Node {
     double bujur;
     struct Node* next;
 } Node;
+
+// Definisi struct StackItem untuk menyimpan data stack
+typedef struct {
+    int cityIndex;
+    int count;
+    double cost;
+    bool visited[MAX_CITIES];
+} StackItem;
 
 // Fungsi untuk menambahkan node baru ke linked list
 int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
@@ -98,27 +107,59 @@ int find_city_index(Node* cities[], int numCities, char* cityName) {
     return -1;
 }
 
-// Fungsi untuk memecahkan masalah TSP menggunakan algoritma Branch and Bound
-void branch_and_bound(Node* cities[], int numCities, int visited[], int currPos, int count, double cost, double* minCost, double distances[MAX_CITIES][MAX_CITIES], int path[], int bestPath[], int startIndex) {
-    if (count == numCities) {
-        double returnCost = distances[currPos][startIndex];
-        if (returnCost > 0 && (cost + returnCost < *minCost)) {
-            *minCost = cost + returnCost;
-            for (int i = 0; i < numCities; i++) {
-                bestPath[i] = path[i];
-            }
-            bestPath[numCities] = startIndex; // Kembali ke kota awal
-        }
-        return;
-    }
+// Fungsi untuk menemukan jalur terpendek menggunakan algoritma Branch and Bound
+void branch_and_bound(Node* cities[], int numCities, double distances[MAX_CITIES][MAX_CITIES], int startIndex, int *bestPath, double *minCost) {
+    // Buat tumpukan untuk menyimpan informasi kunjungan
+    StackItem stack[MAX_CITIES * MAX_CITIES];
+    int top = -1; // Indeks tumpukan
 
-    for (int i = 0; i < numCities; i++) {
-        if (!visited[i] && distances[currPos][i] > 0) {
-            double newCost = cost + distances[currPos][i];
-            visited[i] = 1;
-            path[count] = i;
-            branch_and_bound(cities, numCities, visited, i, count + 1, newCost, minCost, distances, path, bestPath, startIndex);
-            visited[i] = 0;
+    // Push start city ke tumpukan
+    bool initialVisited[MAX_CITIES] = {false};
+    initialVisited[startIndex] = true;
+    stack[++top] = (StackItem){startIndex, 1, 0, {false}};
+    memcpy(stack[top].visited, initialVisited, sizeof(initialVisited));
+
+    int currentPath[MAX_CITIES + 1];
+
+    while (top >= 0) {
+        // Ambil item dari tumpukan
+        StackItem currentItem = stack[top--];
+        int currentCity = currentItem.cityIndex;
+        double currentCost = currentItem.cost;
+        int count = currentItem.count;
+        bool *visited = currentItem.visited;
+
+        // Simpan jalur saat ini
+        currentPath[count - 1] = currentCity;
+
+        // Jika semua kota telah dikunjungi
+        if (count == numCities) {
+            // Hitung biaya kembali ke kota awal
+            double returnCost = distances[currentCity][startIndex];
+            if (returnCost > 0 && (currentCost + returnCost < *minCost)) {
+                // Jika biaya total lebih kecil dari biaya terkecil yang ditemukan sejauh ini
+                *minCost = currentCost + returnCost;
+                // Salin jalur terbaik yang baru ditemukan
+                memcpy(bestPath, currentPath, numCities * sizeof(int));
+                bestPath[numCities] = startIndex; // Kembali ke kota awal
+            }
+            continue;
+        }
+
+        // Iterasi ke semua kota yang belum dikunjungi dari kota saat ini
+        for (int i = 0; i < numCities; i++) {
+            if (!visited[i] && distances[currentCity][i] > 0) {
+                // Hitung biaya baru
+                double newCost = currentCost + distances[currentCity][i];
+                // Jika biaya baru lebih kecil dari biaya terkecil yang ditemukan sejauh ini, push ke tumpukan
+                if (newCost < *minCost) {
+                    bool newVisited[MAX_CITIES];
+                    memcpy(newVisited, visited, sizeof(newVisited));
+                    newVisited[i] = true;
+                    stack[++top] = (StackItem){i, count + 1, newCost, {false}};
+                    memcpy(stack[top].visited, newVisited, sizeof(newVisited));
+                }
+            }
         }
     }
 }
@@ -179,17 +220,11 @@ int main(void) {
     // Jika ada, maka jalankan algoritma branch and bound dan hitung waktu eksekusi
     clock_t start_time = clock();
 
-    // Inisialisasi array visited
-    int visited[MAX_CITIES];
-    memset(visited, 0, sizeof(visited));
-    visited[startIndex] = 1; // Mulai dari kota yang dipilih
-    int path[MAX_CITIES + 1];  // Untuk menyimpan jalur saat ini
-    int bestPath[MAX_CITIES + 1];  // Untuk menyimpan jalur terbaik
-    path[0] = startIndex;
-
-    // Mulai branch and bound untuk mencari biaya minimum
+    // Inisialisasi variabel untuk menyimpan jalur terbaik dan biaya minimum
+    int bestPath[MAX_CITIES + 1];
     double minCost = INFINITY;
-    branch_and_bound(cities, numCities, visited, startIndex, 1, 0, &minCost, distances, path, bestPath, startIndex);
+
+    branch_and_bound(cities, numCities, distances, startIndex, bestPath, &minCost);
 
     // Hitung waktu eksekusi
     clock_t end_time = clock();
