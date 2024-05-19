@@ -39,7 +39,7 @@ Node* input_file() {
     Node *Linked_list_kota = NULL;
 
     char file_name[MAX_LEN_STRING];
-    printf("Masukkan File Map: ");
+    printf("Enter list of cities file name: ");
     scanf("%s", file_name);
 
     FILE* stream = fopen(file_name, "r");
