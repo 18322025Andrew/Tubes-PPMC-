@@ -9,13 +9,11 @@
 #include "haversine.h"
 #include "struct.h"
 
-//double minimum_length = INFINITY;
-//int indeks_kolom = 0;
-
 bool next_permutation(int* arr, int n);
 void swap(int* a, int* b);
 void reverse(int* arr, int start, int end);
 
+//fungsi menghitung jumlah kota
 int amount_vertex(int *jumlah_kota, Node *linked){
   Node *temp = linked;
   while(temp != NULL){
@@ -25,6 +23,7 @@ int amount_vertex(int *jumlah_kota, Node *linked){
   return(0);
 }
 
+//fungsi menghitung
 int fill_vertex(Node* linked, char *kota[]){
   Node *temp = linked;
   int i = 0;
@@ -36,6 +35,7 @@ int fill_vertex(Node* linked, char *kota[]){
   return(0);
 }
 
+//fungsi mengisi array nama kota dan nilai lintang dan bujur
 int find_lintang_bujur(Node *data, int indeks, char *kota[], double *lintang, double *bujur){
   char nama[MAX_LEN_STRING];
   strcpy(nama, kota[indeks]);
@@ -55,6 +55,7 @@ int find_lintang_bujur(Node *data, int indeks, char *kota[], double *lintang, do
   return(0);
 }
 
+//fungsi mencari indeks kota awal di array vertex
 int find_indeks(char *kota[], char *nama_kota, int jumlah_kota){
   int indeks;
   for(int i = 0; i < jumlah_kota; i ++){
@@ -65,15 +66,18 @@ int find_indeks(char *kota[], char *nama_kota, int jumlah_kota){
   return(indeks);
 }
 
+//fungsi memasukkan jarah antar kota ke matriks
 int insert_matriks(double **matriks, Node *linked, int jumlah_kota, char *nama_kota[]){
   double lintang1, bujur1, lintang2, bujur2;
   for(int i = 0; i < jumlah_kota; i ++){
+    //bagian mencari lintang dan bujur
     find_lintang_bujur(linked, i, nama_kota, &lintang1, &bujur1);
     for(int j = 0; j < jumlah_kota; j ++){
       if(i == j){matriks[i][j] = 0;
       }
       else{
         find_lintang_bujur(linked, j, nama_kota,&lintang2, &bujur2);
+        //bagian isi
         matriks[i][j] = haversine(lintang1, bujur1, lintang2, bujur2);
       }
     }
@@ -81,38 +85,7 @@ int insert_matriks(double **matriks, Node *linked, int jumlah_kota, char *nama_k
   return(0);
 }
 
-double calculated_total_destination_length(double **Matriks_jarak, double **Matriks_koef, int jumlah_kota){
-  double total = 0;
-  for(int i = 0; i < jumlah_kota; i++){
-    for(int j = 0; j < jumlah_kota; j ++){
-      total += Matriks_jarak[i][j] * Matriks_koef [i][j];
-    }
-  }
-  return(total);
-}
-
-bool cek_barisan(double **Matriks_koef, int rows, int jumlah_kota){
-  int total = 0;
-  for(int i = 0; i < jumlah_kota; i ++){
-    if(i == jumlah_kota && Matriks_koef[jumlah_kota][i] != 0){
-      return(false);
-    }
-    else{total += Matriks_koef[jumlah_kota][i];}
-  }
-
-  if(total == 1){return(true);}
-  else{return(false);}
-}
-
-int ilp(double **Matriks_jarak, double **Matrik_koef, int jumlah_kota){
-  for(int i = 0; i < jumlah_kota; i ++){
-    for(int j = 0; j < jumlah_kota; j ++){
-      Matrik_koef[i][j];
-    }
-  }
-}
-
-// Here ??
+//fungsi menghitung jarak total di array path
 double calculate_total_distance(double **Matriks, int *path, int jumlah_kota) {
     double total_length = 0;
     for (int i = 0; i < jumlah_kota - 1; i++) {
@@ -122,7 +95,9 @@ double calculate_total_distance(double **Matriks, int *path, int jumlah_kota) {
     return total_length;
 }
 
+//algoritma ilp
 void tsp_ilp(double **Matriks, int jumlah_kota, int start_index, int *best_path, double *min_length) {
+    //inisialisaisi array permutasi
     int perm[jumlah_kota - 1];
     int perm_index = 0;
     for (int i = 0; i < jumlah_kota; i++) {
@@ -142,11 +117,13 @@ void tsp_ilp(double **Matriks, int jumlah_kota, int start_index, int *best_path,
         double current_length = calculate_total_distance(Matriks, current_path, jumlah_kota);
         if (current_length < *min_length) {
             *min_length = current_length;
+            // bagian mengisi elemen array current path ke best path 
             memcpy(best_path, current_path, jumlah_kota * sizeof(int));
         }
     } while (next_permutation(perm, jumlah_kota - 1));
 }
 
+//fungsi print array path
 void print_path(int *path, int jumlah_kota, char *vertex[]) {
     printf("Path: ");
     for (int i = 0; i < jumlah_kota; i++) {
@@ -155,6 +132,7 @@ void print_path(int *path, int jumlah_kota, char *vertex[]) {
     printf("%s\n", vertex[path[0]]);
 }
 
+//fungsi permutasi
 bool next_permutation(int* arr, int n) {
     int i = n - 2;
     while (i >= 0 && arr[i] >= arr[i + 1]) {
@@ -172,12 +150,14 @@ bool next_permutation(int* arr, int n) {
     return true;
 }
 
+//fungsi tukar posisi
 void swap(int* a, int* b) {
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
+//fungsi mengubah urutan array
 void reverse(int* arr, int start, int end) {
     while (start < end) {
         swap(&arr[start], &arr[end]);
@@ -205,47 +185,36 @@ int main(){
   }
 
   fill_vertex(linked_data, vertex);
-
+  //alokasi memori ke matrik 
   double **Matriks = (double **)malloc(jumlah_vertex * sizeof(double *));
-  double **Matriks_koefisien = (double **)malloc(jumlah_vertex * sizeof(double *));
   for (int i = 0; i < jumlah_vertex; i++) {
       Matriks[i] = (double *)malloc(jumlah_vertex * sizeof(double));
-      Matriks_koefisien[i] = (double *)malloc(jumlah_vertex * sizeof(double));
-      for(int j = 0; j < jumlah_vertex; j ++){
-        Matriks_koefisien[i][j] = 0;
-      }
   }
+
   insert_matriks(Matriks, linked_data, jumlah_vertex, vertex);
-  //printf("Display isi mastriks\n");
-  /*
-  for(int i = 0; i < jumlah_vertex; i++){
-    for(int j = 0; j < jumlah_vertex; j++){
-      printf("%d,%d : %.6f |",i,j, Matriks[i][j]);
-    }
-    printf("\n");
-  }
-  */
   
   char nama[MAX_LEN_STRING];
   printf("Initial city : ");
   scanf(" %[^\r\n]", nama);
   int initial_indeks = find_indeks(vertex, nama, jumlah_vertex);
-    if (initial_indeks == -1) {
-        printf("City not found.\n");
-        return 1;
-    }
+
+  if (initial_indeks == -1) {
+      printf("City not found.\n");
+      return 1;
+  }
 
   int best_path[jumlah_vertex];
   double min_length;
 
   clock_t t;
   t = clock();
-  tsp_ilp(Matriks, jumlah_vertex, initial_indeks, best_path, &min_length);
+  tsp_ilp(Matriks, jumlah_vertex, initial_indeks, best_path, &min_length);//algo ilp
   t = clock() - t;
-  
+  // print
   print_path(best_path, jumlah_vertex, vertex);
-  printf("Minimum path length: %.2f\n", min_length);
+  printf("Minimum path length: %.10f\n", min_length);
   double time_taken = ((double)t)/CLOCKS_PER_SEC;
+  //print waktu
   printf("ILP algorithm took %f s to excute\n", time_taken);
 
   // free capasity
