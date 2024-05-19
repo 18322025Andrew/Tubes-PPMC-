@@ -7,20 +7,23 @@
 #define MAX_LEN_STRING 255
 #define M_PI 3.14159265358979323846
 
+// Definisi struktur untuk node dalam linked list yang merepresentasikan sebuah kota
 typedef struct Node {
-    char nama_kota[MAX_LEN_STRING];
-    double lintang;
+    char nama_kota[MAX_LEN_STRING]; // Nama kota
+    double lintang; 
     double bujur;
-    struct Node* next;
+    struct Node* next;  // Pointer ke node berikutnya
 } Node;
 
+// Definisi struktur untuk semut dalam algoritma ACO
 typedef struct Ant {
-    int* tour;
-    int tour_length;
-    int* visited;
-    double tour_distance;
+    int* tour; // Array yang merepresentasikan rute semut
+    int tour_length; // Panjang rute
+    int* visited; // Array untuk melacak kota yang sudah dikunjungi
+    double tour_distance; // Total jarak rute
 } Ant;
 
+// Fungsi menambahkan node kota ke dalam linked list
 int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
     Node *temp = (Node*)malloc(sizeof(Node));
     if (temp == NULL) {
@@ -37,12 +40,13 @@ int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
     return 0;
 }
 
+// Fungsi membaca data kota dari file dan membuat linked list kota
 Node* input_file(char* file_name) {
     Node *Linked_list_kota = NULL;
 
     FILE* stream = fopen(file_name, "r");
     if (stream == NULL) {
-        printf("File tidak ditemukan, ");
+        printf("File tidak dapat ditemukan, ");
         return NULL;
     }
 
@@ -70,6 +74,7 @@ Node* input_file(char* file_name) {
     return Linked_list_kota;
 }
 
+// Fungsi menghitung jarak Haversine antara dua titik koordinat geografis
 double haversine(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * M_PI / 180.0;
     double dLon = (lon2 - lon1) * M_PI / 180.0;
@@ -84,6 +89,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     return rad * c;
 }
 
+// Fungsi untuk menghitung jumlah kota dalam linked list
 int calculate_cities(Node *daftar_kota) {
     int jumlah_kota = 0;
     Node *temp = daftar_kota;
@@ -95,7 +101,8 @@ int calculate_cities(Node *daftar_kota) {
     return jumlah_kota;
 }
 
-void make_cities_arrOfNode(Node *daftar_kota, Node *cities[], int jumlah_kota) {
+// Fungsi mengubah linked list kota menjadi array node
+void cities_arrOfNode(Node *daftar_kota, Node *cities[], int jumlah_kota) {
     Node *temp = daftar_kota;
     for (int i = 0; i < jumlah_kota; i++) {
         cities[i] = temp;
@@ -103,7 +110,8 @@ void make_cities_arrOfNode(Node *daftar_kota, Node *cities[], int jumlah_kota) {
     }
 }
 
-void make_distanceMatrices(Node *cities[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
+// Fungsi membuat matriks jarak menggunakan jarak Haversine antara setiap pasangan kota
+void distance_matrices(Node *cities[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
     for (int i = 0; i < jumlah_kota; i++) {
         for (int j = 0; j < jumlah_kota; j++) {
             if (i == j) {
@@ -115,6 +123,7 @@ void make_distanceMatrices(Node *cities[], int jumlah_kota, double distances[jum
     }
 }
 
+// Fungsi menginisialisasi semut
 void initialize_ant(Ant* ant, int numCities) {
     ant->tour = (int*)malloc(numCities * sizeof(int));
     ant->visited = (int*)malloc(numCities * sizeof(int));
@@ -130,11 +139,13 @@ void initialize_ant(Ant* ant, int numCities) {
     ant->tour_distance = 0.0;
 }
 
+// Fungsi membebaskan memori yang dialokasikan untuk semut
 void free_ant(Ant* ant) {
     free(ant->tour);
     free(ant->visited);
 }
 
+// Fungsi memilih kota berikutnya yang akan dikunjungi oleh semut berdasarkan feromon dan jarak
 int select_next_city(Ant* ant, int numCities, double pheromones[numCities][numCities], double distances[numCities][numCities], double alpha, double beta) {
     int current_city = ant->tour[ant->tour_length - 1];
     double total_prob = 0.0;
@@ -167,11 +178,13 @@ int select_next_city(Ant* ant, int numCities, double pheromones[numCities][numCi
     return -1;
 }
 
+// Fungsi memperbarui rute semut dengan kota berikutnya
 void update_ant_tour(Ant* ant, int city) {
     ant->tour[ant->tour_length++] = city;
     ant->visited[city] = 1;
 }
 
+// Fungsi menghitung total jarak dari rute semut
 void calculate_tour_distance(Ant* ant, int numCities, double distances[numCities][numCities]) {
     ant->tour_distance = 0.0;
     for (int i = 0; i < numCities - 1; i++) {
@@ -184,7 +197,8 @@ void calculate_tour_distance(Ant* ant, int numCities, double distances[numCities
     ant->tour_distance += distances[last_city][start_city];
 }
 
-void print_bestRoute(Node *cities[], Ant* ant, int numCities) {
+// Fungsi mencetak rute terbaik yang ditemukan oleh semut
+void print_best_route(Node *cities[], Ant* ant, int numCities) {
     printf("Best route found:\n");
     for (int i = 0; i < numCities; i++) {
         printf("%s", cities[ant->tour[i]]->nama_kota);
@@ -196,6 +210,7 @@ void print_bestRoute(Node *cities[], Ant* ant, int numCities) {
     printf("\nBest route distance: %lf km\n", ant->tour_distance);
 }
 
+// Fungsi utama eksekusi Ant Colony Optimization
 void ant_colony_optimization(Node* cities[], int numCities, double distances[numCities][numCities], double pheromones[numCities][numCities], int numAnts, double alpha, double beta, double evaporation_rate, int max_iterations, int startIndex) {
     Ant ants[numAnts];
     for (int i = 0; i < numAnts; i++) {
@@ -216,13 +231,13 @@ void ant_colony_optimization(Node* cities[], int numCities, double distances[num
             update_ant_tour(&ants[i], startIndex);
             calculate_tour_distance(&ants[i], numCities, distances);
         }
-
+        // Evaporasi Feromon
         for (int i = 0; i < numCities; i++) {
             for (int j = 0; j < numCities; j++) {
                 pheromones[i][j] *= (1 - evaporation_rate);
             }
         }
-
+        // Memperbarui feromon berdasarkan tur semut
         for (int i = 0; i < numAnts; i++) {
             for (int j = 0; j < numCities; j++) {
                 int city1 = ants[i].tour[j];
@@ -232,7 +247,7 @@ void ant_colony_optimization(Node* cities[], int numCities, double distances[num
             }
         }
     }
-
+    // Menemukan rute terbaik secara keseluruhan
     Ant* best_ant = &ants[0];
     for (int i = 1; i < numAnts; i++) {
         if (ants[i].tour_distance < best_ant->tour_distance) {
@@ -240,13 +255,14 @@ void ant_colony_optimization(Node* cities[], int numCities, double distances[num
         }
     }
 
-    print_bestRoute(cities, best_ant, numCities);
-
+    print_best_route(cities, best_ant, numCities);
+    // Membebaskan alokasi memori 
     for (int i = 0; i < numAnts; i++) {
         free_ant(&ants[i]);
     }
 }
 
+// Fungsi menentukan indeks kota berdasarkan nama kota
 int find_city_index(Node* cities[], int numCities, const char* city_name) {
     for (int i = 0; i < numCities; i++) {
         if (strcmp(cities[i]->nama_kota, city_name) == 0) {
@@ -256,6 +272,7 @@ int find_city_index(Node* cities[], int numCities, const char* city_name) {
     return -1;
 }
 
+// Fungsi Utama Program
 int main() {
     static int run_counter = 0;
 
@@ -273,10 +290,10 @@ int main() {
 
         int jumlah_kota = calculate_cities(daftar_kota);
         Node *cities[jumlah_kota];
-        make_cities_arrOfNode(daftar_kota, cities, jumlah_kota);
+        cities_arrOfNode(daftar_kota, cities, jumlah_kota);
 
         double distances[jumlah_kota][jumlah_kota];
-        make_distanceMatrices(cities, jumlah_kota, distances);
+        distance_matrices(cities, jumlah_kota, distances);
 
         double pheromones[jumlah_kota][jumlah_kota];
         for (int i = 0; i < jumlah_kota; i++) {
