@@ -48,6 +48,7 @@ Node* input_file() {
 
     // Meminta user untuk memasukkan nama file map yang diinginkan
     char file_name[MAX_LEN_STRING];
+    //Output program
     printf("-----Welcome to TSP Program using Greedy Algorithm-----\n");
     printf("Enter list of cities file name: ");
     scanf("%s", file_name);
