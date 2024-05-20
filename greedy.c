@@ -214,6 +214,15 @@ int main() {
     // Membebaskan memori
     free(cities);
     free(bestRoute);
+    while (cities_list != NULL) {
+        Node *temp = cities_list;
+        cities_list = cities_list->next;
+        free(temp);
+    }
 
-    clock_t end = clock(); // Waktu saat program berhenti
-    double timeElapsed = ((double)(end - start)) / CLOCKS_PER_SEC; // Total waktu
+    clock_t end = clock(); // Waktu ketika program selesai berjalan
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC; // Menghitung waktu eksekusi program
+    printf("Time spent: %.5f seconds\n", time_spent); // Mencetak waktu eksekusi
+
+    return 0;
+}
