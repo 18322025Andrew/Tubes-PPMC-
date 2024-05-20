@@ -2,7 +2,7 @@
 soal no 2 Travelling salesman problem
 data untuk test case bisa pakai data.
 
-Algo : 
+Algo ::
 Digta : DFS
 Laura : Ant & Colony
 Benny : BB
