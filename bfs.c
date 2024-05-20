@@ -7,6 +7,7 @@
 #include <float.h>
 #include <time.h> // Berguna untuk mengukur waktu eksekusi program
 
+#include "haversine.h"
 // Variabel global 
 #define MAX_LEN 255
 #define radius_earth 6371
@@ -48,7 +49,7 @@ Node* input_file() {
 
     char file_name[MAX_LEN];
     printf("Enter list of cities file name: ");
-    fgets("%s", file_name);
+    scanf("%s", file_name);
 
     FILE* stream = fopen(file_name, "r");
     if (stream == NULL) {
@@ -71,19 +72,6 @@ Node* input_file() {
 
     fclose(stream);
     return Linked_list_kota;
-}
-
-// Fungsi untuk menghitung jarak antar kedua titik koordinat
-double haversine(double lat1, double lon1, double lat2, double lon2) {
-    double dLat = (lat2 - lat1) * M_PI / 180.0;
-    double dLon = (lon2 - lon1) * M_PI / 180.0;
-    lat1 = lat1 * M_PI / 180.0;
-    lat2 = lat2 * M_PI / 180.0;
-
-    double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    return radius_earth * c;
 }
 
 // Fungsi untuk menghitung jarak total
@@ -157,28 +145,11 @@ void bfs(Node *cities[], int numCities, int startCityIndex) {
         printf("%s -> ", cities[bestPath.path[i]]->nama_kota);
     }
     printf("%s\n", cities[bestPath.path[0]]->nama_kota);
-    printf("Best route distance: %.5f km\n", bestPath.minJarak);
+    printf("Best route distance: %.8f km\n", bestPath.minJarak);
 
     free(queue);
 }
 
-// Menampilkan data
-void print(Node* hasil) {
-    Node* display = hasil;
-    while (display != NULL) {
-        printf("%s \t: %f\t|| %f\n", display->nama_kota, display->lintang, display->bujur);
-        display = display->next;
-    }
-}
-
-// Fungsi untuk menampilkan kota
-void print(Node* hasil) {
-    Node* display = hasil;
-    while (display != NULL) {
-        printf("%s \t: %f\t|| %f\n", display->nama_kota, display->lintang, display->bujur);
-        display = display->next;
-    }
-}
 
 // Fungsi utama
 int main (){
@@ -204,7 +175,7 @@ int main (){
     departure[strcspn(departure, "\n")] = '\0';
 
     int cityIndex = findCityIndex(city, numCities, departure);
-    if (departure == -1){
+    if (cityIndex == -1){
         printf ("Kota tidak dapat ditemukan");
         return 1; // Hasil tidak sesuai 
     }
@@ -212,17 +183,15 @@ int main (){
 
     // Menguji dan melihat waktu yang dibutuhkan program untuk menyelesaikan masalah
     // Memulai pengukuran waktu
-    // clock_t start_time = clock();
-
+    clock_t start_time = clock();
     // Panggil fungsi BFS
-    bfs(city, numCities, departure);
-
+    bfs(city, numCities, cityIndex);
     // Akhiri pengukuran waktu
-    // clock_t end_time = clock();
-    // double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    clock_t end_time = clock();
+    double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
     // Tampilkan waktu eksekusi
-    // printf("Waktu eksekusi BFS: %f detik\n", time_taken);
+    printf("Waktu eksekusi BFS: %.5f detik\n", time_taken);
 
     return 0;
 }
