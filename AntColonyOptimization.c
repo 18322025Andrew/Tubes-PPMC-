@@ -1,4 +1,4 @@
-// Reference by: https://strikingloo.github.io/ant-colony-optimization-tsp & https://github.com/arjun-krishna/TSP/blob/master/aco.cpp 
+// Reference by: https://learn.microsoft.com/en-us/archive/msdn-magazine/2012/february/test-run-ant-colony-optimization & https://github.com/arjun-krishna/TSP/blob/master/aco.cpp 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
