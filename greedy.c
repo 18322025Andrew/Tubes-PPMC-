@@ -7,7 +7,7 @@
 
 #define MAX_LEN_STRING 255
 #define EARTH_RADIUS 6371.0
-#define M_PI 3.14159265358979323846
+#define Phi 3.14159265358979323846
 
 // Struct Node berisi variabel yang akan digunakan dalam program
 typedef struct Node {
@@ -17,9 +17,9 @@ typedef struct Node {
     struct Node* next;
 } Node;
 
-// Fungsi untuk mengkonversi derajat ke radian
+//Fungsi untuk mengkonversi derajat ke radian
 double toRadians(double degree) {
-    return degree * M_PI / 180.0;
+    return degree * Phi / 180.0;
 }
 
 // Fungsi untuk menambahkan node ke dalam linked list
@@ -88,9 +88,22 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     return EARTH_RADIUS * c;
 }
 
-// Fungsi untuk menentukan lokasi awal untuk memulai pencarian masalah TSP
-void findBestStartingCity(Node cities[], int n, int startCityIndex, double *bestDistance, int *bestRoute) {
-    *bestDistance = solveTSP(cities, n, startCityIndex, bestRoute);
+// Fungsi iteratif menggunakan Algoritma Greedy untuk mencari kota terdekat yang belum dikunjungi
+int findNearestCity(Node cities[], int n, int visited[], int currentCity) {
+    double minDistance = DBL_MAX;
+    int nearestCity = -1;
+    for (int i = 0; i < n; i++) {
+        // Conditional statement pada kota yang belum dikunjungi
+        if (!visited[i]) {
+            double distance = haversine(cities[currentCity].lintang, cities[currentCity].bujur,
+                                        cities[i].lintang, cities[i].bujur);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestCity = i;
+            }
+        }
+    }
+    return nearestCity; // Mengembalikkan kota terdekat
 }
 
 // Fungsi untuk menyelesaikan permasalahan TSP dengan Algoritma Greedy
@@ -120,34 +133,9 @@ double solveTSP(Node cities[], int n, int startCity, int *route) {
     return totalDistance;
 }
 
-// Fungsi untuk menentukan total jarak dari keseluruhan kota yang ditempuh
-double calculateTotalDistance(Node cities[], int *route, int n) {
-    double totalDistance = 0.0;
-    for (int i = 0; i < n - 1; i++) {
-        totalDistance += haversine(cities[route[i]].lintang, cities[route[i]].bujur,
-                                   cities[route[i + 1]].lintang, cities[route[i + 1]].bujur);
-    }
-    totalDistance += haversine(cities[route[n - 1]].lintang, cities[route[n - 1]].bujur,
-                               cities[route[0]].lintang, cities[route[0]].bujur);
-    return totalDistance;
-}
-
-// Fungsi iteratif menggunakan Algoritma Greedy untuk mencari kota terdekat yang belum dikunjungi
-int findNearestCity(Node cities[], int n, int visited[], int currentCity) {
-    double minDistance = DBL_MAX;
-    int nearestCity = -1;
-    for (int i = 0; i < n; i++) {
-        // Conditional statement pada kota yang belum dikunjungi
-        if (!visited[i]) {
-            double distance = haversine(cities[currentCity].lintang, cities[currentCity].bujur,
-                                        cities[i].lintang, cities[i].bujur);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestCity = i;
-            }
-        }
-    }
-    return nearestCity; // Mengembalikkan kota terdekat
+// Fungsi untuk menentukan lokasi awal untuk memulai pencarian masalah TSP
+void findBestStartingCity(Node cities[], int n, int startCityIndex, double *bestDistance, int *bestRoute) {
+    *bestDistance = solveTSP(cities, n, startCityIndex, bestRoute);
 }
 
 // Fungsi utama
@@ -222,7 +210,7 @@ int main() {
 
     clock_t end = clock(); // Waktu ketika program selesai berjalan
     double time_spent = (double)(end - start) / CLOCKS_PER_SEC; // Menghitung waktu eksekusi program
-    printf("Time spent: %.5f seconds\n", time_spent); // Mencetak waktu eksekusi
+    printf("Time spent: %.5f ms\n", time_spent); // Mencetak waktu eksekusi
 
     return 0;
 }
