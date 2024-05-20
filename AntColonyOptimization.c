@@ -46,28 +46,26 @@ Node* input_file(char* file_name) {
 
     FILE* stream = fopen(file_name, "r");
     if (stream == NULL) {
-        printf("File tidak dapat ditemukan, ");
+        printf("File tidak ditemukan\n");
         return NULL;
     }
 
     char line[MAX_LEN_STRING];
+    char tempLine[MAX_LEN_STRING];
+    char token_bujur[MAX_LEN_STRING];
+    char token_lintang[MAX_LEN_STRING];
     char kota_temp[MAX_LEN_STRING];
     double lintang, bujur;
 
-    while (fgets(line, sizeof(line), stream)) {
-        char* token = strtok(line, ",");
-        if (token != NULL) {
-            strcpy(kota_temp, token);
-            token = strtok(NULL, ",");
-            if (token != NULL) {
-                lintang = atof(token);
-                token = strtok(NULL, ",");
-                if (token != NULL) {
-                    bujur = atof(token);
-                    add(&Linked_list_kota, lintang, bujur, kota_temp);
-                }
-            }
-        }
+    // Membaca setiap baris dari file
+    while (fgets(line, MAX_LEN_STRING, stream)) {
+        strcpy(tempLine, line);
+        strcpy(kota_temp, strtok(tempLine, ","));
+        strcpy(token_lintang, strtok(NULL, ","));
+        strcpy(token_bujur, strtok(NULL, "\n"));
+        sscanf(token_bujur, "%lf", &bujur);
+        sscanf(token_lintang, "%lf", &lintang);
+        add(&Linked_list_kota, lintang, bujur, kota_temp);
     }
 
     fclose(stream);
