@@ -107,7 +107,7 @@ int findNearestCity(Node cities[], int n, int visited[], int currentCity) {
 }
 
 // Fungsi untuk menyelesaikan permasalahan TSP dengan Algoritma Greedy
-double solveTSP(Node cities[], int n, int startCity, int *route) {
+double greedy(Node cities[], int n, int startCity, int *route) {
     int *visited = (int *)calloc(n, sizeof(int));
     double totalDistance = 0.0;
 
@@ -133,9 +133,20 @@ double solveTSP(Node cities[], int n, int startCity, int *route) {
     return totalDistance;
 }
 
+void print_bestRoute(Node *cities[], int bestPath[], int jumlah_kota, double minCost) {
+    printf("Best route found:\n");
+    for (int i = 0; i <= jumlah_kota; i++) {
+        printf("%s", cities[bestPath[i]]->nama_kota);
+        if (i < jumlah_kota) {
+            printf(" -> ");
+        }
+    }
+    printf("\nBest route distance: %lf km\n", minCost);
+}
+
 // Fungsi untuk menentukan lokasi awal untuk memulai pencarian masalah TSP
 void findBestStartingCity(Node cities[], int n, int startCityIndex, double *bestDistance, int *bestRoute) {
-    *bestDistance = solveTSP(cities, n, startCityIndex, bestRoute);
+    *bestDistance = greedy(cities, n, startCityIndex, bestRoute);
 }
 
 // Fungsi utama
