@@ -102,36 +102,36 @@ int calculate_cities(Node *daftar_kota) {
 }
 
 // Fungsi mengubah linked list kota menjadi array node
-void cities_arrOfNode(Node *daftar_kota, Node *cities[], int jumlah_kota) {
+void array_node(Node *daftar_kota, Node *kota[], int jumlah_kota) {
     Node *temp = daftar_kota;
     for (int i = 0; i < jumlah_kota; i++) {
-        cities[i] = temp;
+        kota[i] = temp;
         temp = temp->next;
     }
 }
 
 // Fungsi membuat matriks jarak menggunakan jarak Haversine antara setiap pasangan kota
-void distance_matrices(Node *cities[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
+void distance_matrices(Node *kota[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
     for (int i = 0; i < jumlah_kota; i++) {
         for (int j = 0; j < jumlah_kota; j++) {
             if (i == j) {
                 distances[i][j] = 0;
             } else {
-                distances[i][j] = haversine(cities[i]->lintang, cities[i]->bujur, cities[j]->lintang, cities[j]->bujur);
+                distances[i][j] = haversine(kota[i]->lintang, kota[i]->bujur, kota[j]->lintang, kota[j]->bujur);
             }
         }
     }
 }
 
 // Fungsi menginisialisasi semut
-void initialize_ant(Ant* ant, int numCities) {
-    ant->tour = (int*)malloc(numCities * sizeof(int));
-    ant->visited = (int*)malloc(numCities * sizeof(int));
+void initialize_ant(Ant* ant, int jumlah_kota) {
+    ant->tour = (int*)malloc(jumlah_kota * sizeof(int));
+    ant->visited = (int*)malloc(jumlah_kota * sizeof(int));
     if (ant->tour == NULL || ant->visited == NULL) {
         printf("Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < numCities; i++) {
+    for (int i = 0; i < jumlah_kota; i++) {
         ant->visited[i] = 0;
         ant->tour[i] = -1;
     }
@@ -146,12 +146,12 @@ void free_ant(Ant* ant) {
 }
 
 // Fungsi memilih kota berikutnya yang akan dikunjungi oleh semut berdasarkan feromon dan jarak
-int select_next_city(Ant* ant, int numCities, double pheromones[numCities][numCities], double distances[numCities][numCities], double alpha, double beta) {
+int next_city(Ant* ant, int jumlah_kota, double pheromones[jumlah_kota][jumlah_kota], double distances[jumlah_kota][jumlah_kota], double alpha, double beta) {
     int current_city = ant->tour[ant->tour_length - 1];
     double total_prob = 0.0;
-    double probabilities[numCities];
+    double probabilities[jumlah_kota];
 
-    for (int i = 0; i < numCities; i++) {
+    for (int i = 0; i < jumlah_kota; i++) {
         if (!ant->visited[i]) {
             double pheromone = pow(pheromones[current_city][i], alpha);
             double visibility = 1.0 / distances[current_city][i];
@@ -168,7 +168,7 @@ int select_next_city(Ant* ant, int numCities, double pheromones[numCities][numCi
 
     double rand_val = (double)rand() / RAND_MAX;
     double cumulative_prob = 0.0;
-    for (int i = 0; i < numCities; i++) {
+    for (int i = 0; i < jumlah_kota; i++) {
         cumulative_prob += probabilities[i] / total_prob;
         if (!ant->visited[i] && cumulative_prob >= rand_val) {
             return i;
@@ -179,69 +179,69 @@ int select_next_city(Ant* ant, int numCities, double pheromones[numCities][numCi
 }
 
 // Fungsi memperbarui rute semut dengan kota berikutnya
-void update_ant_tour(Ant* ant, int city) {
-    ant->tour[ant->tour_length++] = city;
-    ant->visited[city] = 1;
+void update_ant_tour(Ant* ant, int kota) {
+    ant->tour[ant->tour_length++] = kota;
+    ant->visited[kota] = 1;
 }
 
 // Fungsi menghitung total jarak dari rute semut
-void calculate_tour_distance(Ant* ant, int numCities, double distances[numCities][numCities]) {
+void calculate_tour_distance(Ant* ant, int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
     ant->tour_distance = 0.0;
-    for (int i = 0; i < numCities - 1; i++) {
-        int city1 = ant->tour[i];
-        int city2 = ant->tour[i + 1];
-        ant->tour_distance += distances[city1][city2];
+    for (int i = 0; i < jumlah_kota - 1; i++) {
+        int kota1 = ant->tour[i];
+        int kota2 = ant->tour[i + 1];
+        ant->tour_distance += distances[kota1][kota2];
     }
-    int last_city = ant->tour[numCities - 1];
+    int last_city = ant->tour[jumlah_kota - 1];
     int start_city = ant->tour[0];
     ant->tour_distance += distances[last_city][start_city];
 }
 
 // Fungsi mencetak rute terbaik yang ditemukan oleh semut
-void print_best_route(Node *cities[], Ant* ant, int numCities) {
+void display_best_route(Node *kota[], Ant* ant, int jumlah_kota) {
     printf("Best route found:\n");
-    for (int i = 0; i < numCities; i++) {
-        printf("%s", cities[ant->tour[i]]->nama_kota);
-        if (i < numCities - 1) {
+    for (int i = 0; i < jumlah_kota; i++) {
+        printf("%s", kota[ant->tour[i]]->nama_kota);
+        if (i < jumlah_kota - 1) {
             printf(" -> ");
         }
     }
-    printf(" -> %s", cities[ant->tour[0]]->nama_kota);
+    printf(" -> %s", kota[ant->tour[0]]->nama_kota);
     printf("\nBest route distance: %lf km\n", ant->tour_distance);
 }
 
 // Fungsi utama eksekusi Ant Colony Optimization
-void ant_colony_optimization(Node* cities[], int numCities, double distances[numCities][numCities], double pheromones[numCities][numCities], int numAnts, double alpha, double beta, double evaporation_rate, int max_iterations, int startIndex) {
-    Ant ants[numAnts];
-    for (int i = 0; i < numAnts; i++) {
-        initialize_ant(&ants[i], numCities);
+void ant_colony_optimization(Node* kota[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota], double pheromones[jumlah_kota][jumlah_kota], int Ants, double alpha, double beta, double evaporation_rate, int max_iterations, int startIndex) {
+    Ant ants[Ants];
+    for (int i = 0; i < Ants; i++) {
+        initialize_ant(&ants[i], jumlah_kota);
     }
 
     for (int iter = 0; iter < max_iterations; iter++) {
-        for (int i = 0; i < numAnts; i++) {
-            initialize_ant(&ants[i], numCities);
+        for (int i = 0; i < Ants; i++) {
+            initialize_ant(&ants[i], jumlah_kota);
             update_ant_tour(&ants[i], startIndex);
 
-            while (ants[i].tour_length < numCities) {
-                int next_city = select_next_city(&ants[i], numCities, pheromones, distances, alpha, beta);
-                if (next_city == -1) break;
-                update_ant_tour(&ants[i], next_city);
+            while (ants[i].tour_length < jumlah_kota) {
+                int nextCity = next_city(&ants[i], jumlah_kota, pheromones, distances, alpha, beta);
+                if (nextCity == -1) break;
+                update_ant_tour(&ants[i], nextCity);
             }
             
             update_ant_tour(&ants[i], startIndex);
-            calculate_tour_distance(&ants[i], numCities, distances);
+            calculate_tour_distance(&ants[i], jumlah_kota, distances);
         }
         // Evaporasi Feromon
-        for (int i = 0; i < numCities; i++) {
-            for (int j = 0; j < numCities; j++) {
+        for (int i = 0; i < jumlah_kota; i++) {
+            for (int j = 0; j < jumlah_kota; j++) {
                 pheromones[i][j] *= (1 - evaporation_rate);
             }
         }
         // Memperbarui feromon berdasarkan tur semut
-        for (int i = 0; i < numAnts; i++) {
-            for (int j = 0; j < numCities; j++) {
+        for (int i = 0; i < jumlah_kota; i++) {
+            for (int j = 0; j < jumlah_kota; j++) {
                 int city1 = ants[i].tour[j];
-                int city2 = ants[i].tour[(j + 1) % numCities];
+                int city2 = ants[i].tour[(j + 1) % jumlah_kota];
                 pheromones[city1][city2] += 1.0 / ants[i].tour_distance;
                 pheromones[city2][city1] = pheromones[city1][city2];
             }
@@ -249,23 +249,23 @@ void ant_colony_optimization(Node* cities[], int numCities, double distances[num
     }
     // Menemukan rute terbaik secara keseluruhan
     Ant* best_ant = &ants[0];
-    for (int i = 1; i < numAnts; i++) {
+    for (int i = 1; i < Ants; i++) {
         if (ants[i].tour_distance < best_ant->tour_distance) {
             best_ant = &ants[i];
         }
     }
 
-    print_best_route(cities, best_ant, numCities);
+    display_best_route(kota, best_ant, jumlah_kota);
     // Membebaskan alokasi memori 
-    for (int i = 0; i < numAnts; i++) {
+    for (int i = 0; i < jumlah_kota; i++) {
         free_ant(&ants[i]);
     }
 }
 
 // Fungsi menentukan indeks kota berdasarkan nama kota
-int find_city_index(Node* cities[], int numCities, const char* city_name) {
-    for (int i = 0; i < numCities; i++) {
-        if (strcmp(cities[i]->nama_kota, city_name) == 0) {
+int city_index(Node* kota[], int jumlah_kota, const char* nama) {
+    for (int i = 0; i < jumlah_kota; i++) {
+        if (strcmp(kota[i]->nama_kota, nama) == 0) {
             return i;
         }
     }
@@ -289,11 +289,11 @@ int main() {
         }
 
         int jumlah_kota = calculate_cities(daftar_kota);
-        Node *cities[jumlah_kota];
-        cities_arrOfNode(daftar_kota, cities, jumlah_kota);
+        Node *kota[jumlah_kota];
+        array_node(daftar_kota, kota, jumlah_kota);
 
         double distances[jumlah_kota][jumlah_kota];
-        distance_matrices(cities, jumlah_kota, distances);
+        distance_matrices(kota, jumlah_kota, distances);
 
         double pheromones[jumlah_kota][jumlah_kota];
         for (int i = 0; i < jumlah_kota; i++) {
@@ -302,7 +302,7 @@ int main() {
             }
         }
 
-        int numAnts = jumlah_kota + 1;
+        int Ants = jumlah_kota + 1;
         double alpha = 1.0;
         double beta = 2.0;
         double evaporation_rate = 0.5;
@@ -314,7 +314,7 @@ int main() {
         fgets(initial_city, MAX_LEN_STRING, stdin);
         initial_city[strcspn(initial_city, "\n")] = '\0';
 
-        int startIndex = find_city_index(cities, jumlah_kota, initial_city);
+        int startIndex = city_index(kota, jumlah_kota, initial_city);
         if (startIndex == -1) {
             printf("City not found\n");
             return EXIT_FAILURE;
@@ -322,7 +322,7 @@ int main() {
 
         // Jalankan algoritma Ant Colony Optimization dan hitung waktu eksekusi
         clock_t start_time = clock();
-        ant_colony_optimization(cities, jumlah_kota, distances, pheromones, numAnts, alpha, beta, evaporation_rate, max_iterations, startIndex);
+        ant_colony_optimization(kota, jumlah_kota, distances, pheromones, Ants, alpha, beta, evaporation_rate, max_iterations, startIndex);
         clock_t end_time = clock();
 
         // Hitung waktu eksekusi
