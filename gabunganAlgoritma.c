@@ -277,7 +277,7 @@ void solve_brute_force(Node* cities[], int jumlah_kota) {
     printf("Best route distance: %.5f km\n", min_cost);
 }
 
-// ILP (not fully implemented, just a placeholder for demonstration)
+// ILP 
 void ilp(Node* cities[], int jumlah_kota) {
     // Placeholder for ILP TSP solver
     printf("ILP TSP solver not implemented.\n");
