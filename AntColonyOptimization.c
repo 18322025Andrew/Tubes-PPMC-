@@ -89,22 +89,18 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
 
 // Fungsi untuk menghitung jumlah kota dalam linked list
 int calculate_cities(Node *daftar_kota) {
-    int jumlah_kota = 0;
-    Node *temp = daftar_kota;
-    while (temp != NULL) {
-        jumlah_kota++;
-        temp = temp->next;
+    if (daftar_kota == NULL) {
+        return 0;
     }
-
-    return jumlah_kota;
+    return 1 + calculate_cities(daftar_kota->next);
 }
 
 // Fungsi mengubah linked list kota menjadi array node
 void array_node(Node *daftar_kota, Node *kota[], int jumlah_kota) {
-    Node *temp = daftar_kota;
+    Node **temp = &daftar_kota;
     for (int i = 0; i < jumlah_kota; i++) {
-        kota[i] = temp;
-        temp = temp->next;
+        kota[i] = *temp;
+        *temp = (*temp)->next;
     }
 }
 
@@ -112,11 +108,7 @@ void array_node(Node *daftar_kota, Node *kota[], int jumlah_kota) {
 void distance_matrices(Node *kota[], int jumlah_kota, double distances[jumlah_kota][jumlah_kota]) {
     for (int i = 0; i < jumlah_kota; i++) {
         for (int j = 0; j < jumlah_kota; j++) {
-            if (i == j) {
-                distances[i][j] = 0;
-            } else {
-                distances[i][j] = haversine(kota[i]->lintang, kota[i]->bujur, kota[j]->lintang, kota[j]->bujur);
-            }
+            distances[i][j] = (i == j) ? 0 : haversine(kota[i]->lintang, kota[i]->bujur, kota[j]->lintang, kota[j]->bujur);
         }
     }
 }
@@ -263,7 +255,7 @@ void ant_colony_optimization(Node* kota[], int jumlah_kota, double distances[jum
 // Fungsi menentukan indeks kota berdasarkan nama kota
 int city_index(Node* kota[], int jumlah_kota, const char* nama) {
     for (int i = 0; i < jumlah_kota; i++) {
-        if (strcmp(kota[i]->nama_kota, nama) == 0) {
+        if (!strcmp(kota[i]->nama_kota, nama)) {
             return i;
         }
     }
@@ -282,7 +274,7 @@ int main() {
         scanf("%s", file_name);
         Node *daftar_kota = input_file(file_name);
         if (daftar_kota == NULL) {
-            printf("Data Kosong !\n");
+            printf("File tidak ditemukan !\n");
             continue;
         }
 
