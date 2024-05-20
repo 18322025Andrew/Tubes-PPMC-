@@ -151,7 +151,6 @@ void findBestStartingCity(Node cities[], int n, int startCityIndex, double *best
 
 // Fungsi utama
 int main() {
-    clock_t start = clock(); // Waktu saat program mulai berjalan
     Node *cities_list = input_file();
     if (cities_list == NULL) return 1;
 
@@ -198,10 +197,11 @@ int main() {
 
     double bestDistance;
     int *bestRoute = (int *)malloc(n * sizeof(int));
-
+    clock_t start = clock(); // Waktu saat program mulai berjalan
     // Menentukan jarak terbaik dari rute yang sudah ditempuh
-    findBestStartingCity(cities, n, startCityIndex, &bestDistance, bestRoute);
 
+    findBestStartingCity(cities, n, startCityIndex, &bestDistance, bestRoute);
+    clock_t end = clock(); // Waktu ketika program selesai berjalan
     // Mencetak rute terbaik yang sudah ditemukan
     printf("Best route found:\n");
     for (int i = 0; i < n; i++) {
@@ -219,9 +219,8 @@ int main() {
         free(temp);
     }
 
-    clock_t end = clock(); // Waktu ketika program selesai berjalan
     double time_spent = (double)(end - start) / CLOCKS_PER_SEC; // Menghitung waktu eksekusi program
-    printf("Time spent: %.5f s\n", time_spent); // Mencetak waktu eksekusi
+    printf("Time spent: %.10f s\n", time_spent); // Mencetak waktu eksekusi
 
     return 0;
 }
