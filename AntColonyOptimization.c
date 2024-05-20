@@ -1,3 +1,4 @@
+// Reference by: https://strikingloo.github.io/ant-colony-optimization-tsp & https://github.com/arjun-krishna/TSP/blob/master/aco.cpp 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -197,7 +198,7 @@ void display_best_route(Node *kota[], Ant* ant, int jumlah_kota) {
         }
     }
     printf(" -> %s", kota[ant->tour[0]]->nama_kota);
-    printf("\nBest route distance: %lf km\n", ant->tour_distance);
+    printf("\nBest route distance: %1f km\n", ant->tour_distance);
 }
 
 // Fungsi utama eksekusi Ant Colony Optimization
