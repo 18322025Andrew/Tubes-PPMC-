@@ -4,7 +4,6 @@
 #include <math.h>
 #include <time.h>
 
-#define ALPHA 1         // Pheromone trail importance factor
 #define pi 3.14159265358979323846
 #define r 6371
 #define MAX_CHAR 255
@@ -116,7 +115,6 @@ int main() {
 
     size = n; // Update size to be the number of cities read
 
-    int bestTour = (int)malloc(size * sizeof(int));
     float bestTourLength = -1;
 
     char startingCity[100];
@@ -146,5 +144,5 @@ int main() {
     // Cetak waktu hasil eksekusi
     printf("Time elapsed: %.10f s\n", time_spent);
 
-    return 0;
+    return 0;
 }
