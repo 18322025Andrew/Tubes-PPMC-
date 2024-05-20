@@ -210,7 +210,7 @@ int main() {
 
     clock_t end = clock(); // Waktu ketika program selesai berjalan
     double time_spent = (double)(end - start) / CLOCKS_PER_SEC; // Menghitung waktu eksekusi program
-    printf("Time spent: %.5f ms\n", time_spent); // Mencetak waktu eksekusi
+    printf("Time spent: %.5f s\n", time_spent); // Mencetak waktu eksekusi
 
     return 0;
 }
