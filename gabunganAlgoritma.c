@@ -29,6 +29,13 @@ typedef struct {
     double minJarak;
 } Journey;
 
+typedef struct {
+    int *tour;
+    int *visited;
+    int tour_length;
+    double tour_distance;
+} Ant;
+
 // Function to add a new node to the linked list
 int add(Node **head, double data_lintang, double data_bujur, char nama[]) {
     Node *temp;
@@ -229,118 +236,164 @@ void bfs(Node *cities[], int numCities, int startCityIndex) {
 
 // Brute Force
 int vis[MAX_CITIES];
-int permutation[MAX_CITIES];
-int best_route[MAX_CITIES];
-double min_cost;
-double matriks[MAX_CITIES][MAX_CITIES];
+int bestTour[MAX_CITIES];
+double bestCost = DBL_MAX;
+int numCities;
+double distance[MAX_CITIES][MAX_CITIES];
 
-void brute_force(Node* cities[], int jumlah_kota, int posisi) {
-    if (posisi == jumlah_kota) {
-        double cost = 0;
-        for (int i = 0; i < jumlah_kota; i++) {
-            if (i == 0) {
-                cost += matriks[jumlah_kota][permutation[i]];
-            } else {
-                cost += matriks[permutation[i-1]][permutation[i]];
-            }
+void brute_force_tsp(int level, double cost, int tour[]) {
+    if (level == numCities) {
+        if (cost + distance[tour[numCities - 1]][tour[0]] < bestCost) {
+            bestCost = cost + distance[tour[numCities - 1]][tour[0]];
+            memcpy(bestTour, tour, numCities * sizeof(int));
         }
-        cost += matriks[permutation[jumlah_kota-1]][jumlah_kota];
-
-        if (cost < min_cost) {
-            min_cost = cost;
-            for (int i = 0; i < jumlah_kota; i++) {
-                best_route[i] = permutation[i];
-            }
-        }
-    } else {
-        for (int i = 0; i < jumlah_kota; i++) {
-            if (!vis[i]) {
-                vis[i] = 1;
-                permutation[posisi] = i;
-                brute_force(cities, jumlah_kota, posisi + 1);
-                vis[i] = 0;
-            }
+        return;
+    }
+    for (int i = 0; i < numCities; i++) {
+        if (!vis[i]) {
+            vis[i] = 1;
+            tour[level] = i;
+            brute_force_tsp(level + 1, cost + distance[tour[level - 1]][i], tour);
+            vis[i] = 0;
         }
     }
 }
 
-void solve_brute_force(Node* cities[], int jumlah_kota) {
-    min_cost = DBL_MAX;
-    memset(vis, 0, sizeof(vis));
-    brute_force(cities, jumlah_kota, 0);
+// Greedy Algorithm
+void greedy_tsp(Node* cities[], int numCities, int startCityIndex) {
+    bool visited[MAX_CITIES] = { false };
+    int path[MAX_CITIES];
+    double totalDistance = 0.0;
+    int currentCity = startCityIndex;
 
-    printf("Best Route: ");
-    for (int i = 0; i < jumlah_kota; i++) {
-        printf("%s -> ", cities[best_route[i]]->nama_kota);
+    visited[currentCity] = true;
+    path[0] = currentCity;
+
+    for (int i = 1; i < numCities; i++) {
+        int nearestCity = -1;
+        double nearestDistance = DBL_MAX;
+
+        for (int j = 0; j < numCities; j++) {
+            if (!visited[j]) {
+                double dist = haversine(cities[currentCity]->lintang, cities[currentCity]->bujur, cities[j]->lintang, cities[j]->bujur);
+                if (dist < nearestDistance) {
+                    nearestDistance = dist;
+                    nearestCity = j;
+                }
+            }
+        }
+
+        path[i] = nearestCity;
+        visited[nearestCity] = true;
+        totalDistance += nearestDistance;
+        currentCity = nearestCity;
     }
-    printf("%s\n", cities[0]->nama_kota);
-    printf("Best route distance: %.5f km\n", min_cost);
+
+    totalDistance += haversine(cities[currentCity]->lintang, cities[currentCity]->bujur, cities[startCityIndex]->lintang, cities[startCityIndex]->bujur);
+
+    printf("Greedy Algorithm Route: ");
+    for (int i = 0; i < numCities; i++) {
+        printf("%s -> ", cities[path[i]]->nama_kota);
+    }
+    printf("%s\n", cities[startCityIndex]->nama_kota);
+    printf("Total Distance: %.5f km\n", totalDistance);
 }
 
-// ILP 
-void ilp(Node* cities[], int jumlah_kota) {
-    // Placeholder for ILP TSP solver
-    printf("ILP TSP solver not implemented.\n");
+// Placeholder functions for ILP and ACO
+void ilp_tsp(Node* cities[], int numCities) {
+    printf("ILP TSP solution is not implemented yet.\n");
 }
 
-// Main function to execute the selected algorithm
+void aco_tsp(Node* cities[], int numCities) {
+    printf("ACO TSP solution is not implemented yet.\n");
+}
+
+// Main Function
 int main() {
     Node *daftar_kota = input_file();
-    if (!daftar_kota) {
+    if (daftar_kota == NULL) {
         return 1;
     }
 
     int jumlah_kota = calculate_cities(daftar_kota);
-    Node *cities[jumlah_kota];
-    make_cities_arrOfNode(daftar_kota, cities, jumlah_kota);
-
-    double distances[jumlah_kota][jumlah_kota];
-    make_distanceMatrices(cities, jumlah_kota, distances);
-
-    char starting_city[MAX_LEN_STRING];
-    printf("Enter the starting city: ");
-    scanf("%s", starting_city);
-
-    int startIndex = find_city_index(cities, jumlah_kota, starting_city);
-    if (startIndex == -1) {
-        printf("Starting city not found.\n");
+    if (jumlah_kota > MAX_CITIES) {
+        printf("Too many cities! Maximum number of cities is %d.\n", MAX_CITIES);
         return 1;
     }
 
-    int choice;
-    printf("Choose TSP solving method:\n");
-    printf("1. DFS\n");
-    printf("2. BFS\n");
-    printf("3. Brute Force\n");
-    printf("4. ILP\n");
+    Node* cities[MAX_CITIES];
+    make_cities_arrOfNode(daftar_kota, cities, jumlah_kota);
+
+    double distances[MAX_CITIES][MAX_CITIES];
+    make_distanceMatrices(cities, jumlah_kota, distances);
+
+    char startCity[MAX_LEN_STRING];
+    printf("Enter the starting city: ");
+    scanf("%s", startCity);
+
+    int startCityIndex = find_city_index(cities, jumlah_kota, startCity);
+    if (startCityIndex == -1) {
+        printf("Starting city not found in the list.\n");
+        return 1;
+    }
+
+    printf("\nChoose the algorithm to solve TSP:\n");
+    printf("1. Greedy Algorithm\n");
+    printf("2. DFS\n");
+    printf("3. BFS\n");
+    printf("4. Brute Force\n");
+    printf("5. ILP\n");
+    printf("6. ACO\n");
     printf("Enter your choice: ");
+    int choice;
     scanf("%d", &choice);
 
-    if (choice == 1) {
-        int visited[jumlah_kota];
-        int path[jumlah_kota + 1]; // Include start city at the end
-        int bestPath[jumlah_kota + 1];
-        double minCost = DBL_MAX;
-
-        memset(visited, 0, sizeof(visited));
-        visited[startIndex] = 1;
-        path[0] = startIndex;
-        search_best_route(cities, jumlah_kota, visited, startIndex, 1, 0, &minCost, distances, path, bestPath, startIndex);
-
-        printf("Best Route: ");
-        for (int i = 0; i < jumlah_kota; i++) {
-            printf("%s -> ", cities[bestPath[i]]->nama_kota);
+    switch (choice) {
+        case 1:
+            greedy_tsp(cities, jumlah_kota, startCityIndex);
+            break;
+        case 2: {
+            int visited[MAX_CITIES] = {0};
+            int path[MAX_CITIES];
+            int bestPath[MAX_CITIES];
+            double minCost = DBL_MAX;
+            path[0] = startCityIndex;
+            visited[startCityIndex] = 1;
+            search_best_route(cities, jumlah_kota, visited, startCityIndex, 1, 0, &minCost, distances, path, bestPath, startCityIndex);
+            printf("DFS Algorithm Route: ");
+            for (int i = 0; i < jumlah_kota; i++) {
+                printf("%s -> ", cities[bestPath[i]]->nama_kota);
+            }
+            printf("%s\n", cities[bestPath[0]]->nama_kota);
+            printf("Total Distance: %.5f km\n", minCost);
+            break;
         }
-        printf("%s\n", cities[bestPath[0]]->nama_kota);
-        printf("Best route distance: %.5f km\n", minCost);
-    } else if (choice == 2) {
-        bfs(cities, jumlah_kota, startIndex);
-    } else if (choice == 3) {
-        solve_brute_force(cities, jumlah_kota);
-    } else if (choice == 4) {
-        ilp(cities, jumlah_kota);
-    } else {
-        printf("Invalid choice.\n");
+        case 3:
+            bfs(cities, jumlah_kota, startCityIndex);
+            break;
+        case 4: {
+            int tour[MAX_CITIES];
+            for (int i = 0; i < MAX_CITIES; i++) vis[i] = 0;
+            vis[startCityIndex] = 1;
+            tour[0] = startCityIndex;
+            brute_force_tsp(1, 0, tour);
+            printf("Brute Force Algorithm Route: ");
+            for (int i = 0; i < jumlah_kota; i++) {
+                printf("%s -> ", cities[bestTour[i]]->nama_kota);
+            }
+            printf("%s\n", cities[bestTour[0]]->nama_kota);
+            printf("Total Distance: %.5f km\n", bestCost);
+            break;
+        }
+        case 5:
+            ilp_tsp(cities, jumlah_kota);
+            break;
+        case 6:
+            aco_tsp(cities, jumlah_kota);
+            break;
+        default:
+            printf("Invalid choice.\n");
+            break;
     }
 
     return 0;
