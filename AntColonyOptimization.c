@@ -238,10 +238,10 @@ void ant_colony_optimization(Node* kota[], int jumlah_kota, double distances[jum
         // Memperbarui feromon berdasarkan tur semut
         for (int i = 0; i < jumlah_kota; i++) {
             for (int j = 0; j < jumlah_kota; j++) {
-                int city1 = ants[i].tour[j];
-                int city2 = ants[i].tour[(j + 1) % jumlah_kota];
-                pheromones[city1][city2] += 1.0 / ants[i].tour_distance;
-                pheromones[city2][city1] = pheromones[city1][city2];
+                int kota1 = ants[i].tour[j];
+                int kota2 = ants[i].tour[(j + 1) % jumlah_kota];
+                pheromones[kota1][kota2] += 1.0 / ants[i].tour_distance;
+                pheromones[kota2][kota1] = pheromones[kota1][kota2];
             }
         }
     }
